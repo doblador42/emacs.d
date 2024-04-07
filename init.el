@@ -3,8 +3,16 @@
 ;;(setq visible-bell t)			;Flash when the bell rings
 (tool-bar-mode -1)			;Don't show tool-bar
 (scroll-bar-mode -1)			;Don't show scroll bar
-;; (custom-set-variables
- ;; '(initial-frame-alist (quote ((fullscreen . maximized)))))
+(defalias 'yes-or-no-p 'y-or-n-p)	;Change requiring Yes or No to y or n when asked about something.
+(savehist-mode t)			;Save history, amongst emacs sessions.
+;; Whitespace & line wrapping.
+(global-whitespace-mode t)
+(with-eval-after-load "whitespace"
+  (setq whitespace-line-column 110) ; When text flows past 110 chars, highlight it.
+  ;; whitespace-mode by default highlights all whitespace. Show only tabs and trailing spaces.
+  (setq whitespace-style '(face trailing lines-tail)))
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
 
 ;; Themes
 (load-theme 'modus-vivendi t)		;Load the modus vivendi theme
