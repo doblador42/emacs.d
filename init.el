@@ -13,11 +13,13 @@
   (setq whitespace-style '(face trailing lines-tail)))
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
-
+(add-to-list 'load-path "~/.config/emacs/mycode/") ;add my own extensions
+(require 'promela-mode)
 ;; Themes
 (load-theme 'modus-vivendi t)		;Load the modus vivendi theme
 ;; (load-theme 'ef-theme t)
-
+(require 'mu4e)
+(setq mu4e-maildir "~/Maildir")
 ;; Programming
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -32,6 +34,16 @@
  ;; If there is more than one, they won't work right.
  '(LaTeX-command "latexmk")
  '(TeX-engine 'luatex)
+ '(TeX-view-program-list '(("zathura" ("zathura") "")))
+ '(TeX-view-program-selection
+   '(((output-dvi has-no-display-manager)
+      "dvi2tty")
+     ((output-dvi style-pstricks)
+      "dvips and gv")
+     (output-dvi "xdvi")
+     (output-pdf "Zathura")
+     (output-html "xdg-open")))
+ '(custom-enabled-themes '(adwaita))
  '(package-selected-packages '(auctex-latexmk auctex company lsp-mode undo-tree)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -41,3 +53,13 @@
  )
 (require 'auctex-latexmk)
 (auctex-latexmk-setup)
+(defun screenshot-svg ()
+  "Save a screenshot of the current frame as an SVG image.
+Saves to a temp file and puts the filename in the kill ring."
+  (interactive)
+  (let* ((filename (make-temp-file "Emacs" nil ".svg"))
+         (data (x-export-frames nil 'svg)))
+    (with-temp-file filename
+      (insert data))
+    (kill-new filename)
+    (message filename)))
