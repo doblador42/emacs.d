@@ -58,3 +58,7 @@ site-lisp/package/
 /projects
 /forge-*.sqlite
 /projectile.cache
+/package-quickstart.el
+/package-quickstart.elc
+/places
+/backups
