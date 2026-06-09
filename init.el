@@ -141,6 +141,14 @@
   (setq whitespace-line-column 110
         whitespace-style       '(face trailing lines-tail)))
 
+(use-package so-long
+  :ensure nil
+  :init
+  (setq so-long-threshold 400
+        so-long-max-lines 100)
+  :config
+  (global-so-long-mode 1))
+
 ;;; ---------------------------------------------------------------------------
 ;;; Backups / autosaves
 ;;; ---------------------------------------------------------------------------
