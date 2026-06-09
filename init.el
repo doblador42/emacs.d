@@ -8,7 +8,11 @@
 (add-hook 'emacs-startup-hook
           (lambda ()
             (setq gc-cons-threshold  (* 16 1024 1024)
-                  gc-cons-percentage 0.1)))
+                  gc-cons-percentage 0.1
+                  file-name-handler-alist
+                  (delete-dups
+                   (append file-name-handler-alist
+                           my--file-name-handler-alist-original)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; Custom file

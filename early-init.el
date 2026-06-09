@@ -4,6 +4,11 @@
 (setq gc-cons-threshold most-positive-fixnum
       gc-cons-percentage 0.6)
 
+;; Defer file-name-handler-alist — major startup win on configs that load
+;; many .el files. init.el restores it on emacs-startup-hook.
+(defvar my--file-name-handler-alist-original file-name-handler-alist)
+(setq file-name-handler-alist nil)
+
 ;; Suppress UI elements *before* they are drawn (no flash, faster startup).
 (push '(menu-bar-lines . 0)   default-frame-alist)
 (push '(tool-bar-lines . 0)   default-frame-alist)
