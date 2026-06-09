@@ -7,7 +7,7 @@
 ;; once we're up, so interactive editing isn't a memory hog.
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq gc-cons-threshold (* 16 1024 1024)
+            (setq gc-cons-threshold  (* 16 1024 1024)
                   gc-cons-percentage 0.1)))
 
 ;;; ---------------------------------------------------------------------------
@@ -27,8 +27,8 @@
 
 ;; use-package is built in on Emacs 29+. Default to auto-installing packages.
 (require 'use-package)
-(setq use-package-always-ensure  t
-      use-package-always-defer   nil
+(setq use-package-always-ensure   t
+      use-package-always-defer    nil
       use-package-expand-minimally t)
 
 ;;; ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@
 (add-to-list 'auto-mode-alist '("\\.pml\\'" . promela-mode))
 
 ;;; ---------------------------------------------------------------------------
-;;; General UI / behavior
+;;; Editor defaults
 ;;; ---------------------------------------------------------------------------
 (setq inhibit-startup-message t
       visible-bell            t
@@ -49,33 +49,92 @@
       require-final-newline   t
       vc-follow-symlinks      t
       sentence-end-double-space nil
-      read-process-output-max (* 1024 1024)  ; 1 MB — helps LSP throughput
+      read-process-output-max (* 1024 1024) ; 1 MB — helps LSP throughput
+      tab-always-indent       'complete     ; TAB indents, then completes
       native-comp-async-report-warnings-errors 'silent)
 (setq-default indent-tabs-mode nil
               tab-width        4)
-(setq tab-always-indent 'complete)     ; TAB indents, then completes
 
-;; Keep state files (savehist, recentf, save-place) out of the repo root.
-(setq savehist-file   (expand-file-name "var/history"   user-emacs-directory)
-      recentf-save-file (expand-file-name "var/recentf" user-emacs-directory)
-      save-place-file (expand-file-name "var/places"    user-emacs-directory))
-(make-directory (expand-file-name "var/" user-emacs-directory) t)
+;;; ---------------------------------------------------------------------------
+;;; Performance
+;;; ---------------------------------------------------------------------------
+(when (fboundp 'pixel-scroll-precision-mode) (pixel-scroll-precision-mode 1))
+(when (fboundp 'repeat-mode)                  (repeat-mode 1))
 
-(savehist-mode      1)
-(recentf-mode       1)
-(save-place-mode    1)
-(electric-pair-mode 1)
+;;; ---------------------------------------------------------------------------
+;;; Built-in modes
+;;; ---------------------------------------------------------------------------
+(use-package savehist
+  :ensure nil
+  :init
+  (make-directory (expand-file-name "var/" user-emacs-directory) t)
+  (setq savehist-file (expand-file-name "var/history" user-emacs-directory))
+  :config
+  (savehist-mode 1))
 
-;; Demote one-time install/compile chatter so it doesn't pop a window.
-;; (Lands in *Warnings* if you want to inspect it.)
+(use-package recentf
+  :ensure nil
+  :init
+  (setq recentf-save-file (expand-file-name "var/recentf" user-emacs-directory))
+  :config
+  (recentf-mode 1))
+
+(use-package saveplace
+  :ensure nil
+  :init
+  (setq save-place-file (expand-file-name "var/places" user-emacs-directory))
+  :config
+  (save-place-mode 1))
+
+(use-package elec-pair
+  :ensure nil
+  :config
+  (electric-pair-mode 1))
+
+(use-package autorevert
+  :ensure nil
+  :init
+  (setq global-auto-revert-non-file-buffers t)
+  :config
+  (global-auto-revert-mode 1))
+
+(use-package whitespace
+  :ensure nil
+  :hook ((prog-mode   . whitespace-mode)
+         (text-mode   . whitespace-mode)
+         (before-save . delete-trailing-whitespace))
+  :init
+  ;; Only highlight whitespace in code/text buffers — global-whitespace-mode is
+  ;; noisy in dired, magit, and *special* buffers.
+  (setq whitespace-line-column 110
+        whitespace-style       '(face trailing lines-tail)))
+
+;;; ---------------------------------------------------------------------------
+;;; Backups / autosaves
+;;; ---------------------------------------------------------------------------
+(let ((backup-dir (expand-file-name "backups/" user-emacs-directory)))
+  (unless (file-directory-p backup-dir)
+    (make-directory backup-dir t))
+  (setq backup-directory-alist         `((".*" . ,backup-dir))
+        auto-save-file-name-transforms `((".*" ,backup-dir t))
+        backup-by-copying   t
+        delete-old-versions t
+        version-control     t
+        kept-new-versions   6
+        kept-old-versions   2))
+
+;;; ---------------------------------------------------------------------------
+;;; Warning suppression
+;;; ---------------------------------------------------------------------------
+;; Demote install/compile chatter — lands in *Warnings* but doesn't pop a window.
 (with-eval-after-load 'warnings
   (dolist (type '(package bytecomp native-compiler comp))
     (add-to-list 'warning-suppress-types (list type))))
-(global-auto-revert-mode 1)
-(setq global-auto-revert-non-file-buffers t)
-(when (fboundp 'pixel-scroll-precision-mode) (pixel-scroll-precision-mode 1))
-(when (fboundp 'repeat-mode)                  (repeat-mode 1))
-(global-unset-key (kbd "C-z"))         ; avoid accidental suspend-frame freeze
+
+;;; ---------------------------------------------------------------------------
+;;; Theme
+;;; ---------------------------------------------------------------------------
+(load-theme 'modus-vivendi t)
 
 ;;; ---------------------------------------------------------------------------
 ;;; Input methods — toggle Greek <-> system layout with C-\
@@ -84,36 +143,13 @@
 (setq default-input-method "greek")
 (global-set-key (kbd "C-\\") #'toggle-input-method)
 
-;; Send backups and autosaves to one directory instead of strewing them around.
-(let ((backup-dir (expand-file-name "backups/" user-emacs-directory)))
-  (unless (file-directory-p backup-dir)
-    (make-directory backup-dir t))
-  (setq backup-directory-alist         `((".*" . ,backup-dir))
-        auto-save-file-name-transforms `((".*" ,backup-dir t))
-        backup-by-copying t
-        delete-old-versions t
-        version-control     t
-        kept-new-versions   6
-        kept-old-versions   2))
+;;; ---------------------------------------------------------------------------
+;;; Unbind C-z
+;;; ---------------------------------------------------------------------------
+(global-unset-key (kbd "C-z"))             ; avoid accidental suspend-frame freeze
 
 ;;; ---------------------------------------------------------------------------
-;;; Whitespace
-;;; ---------------------------------------------------------------------------
-;; Only highlight whitespace in code/text buffers — global-whitespace-mode is
-;; noisy in dired, magit, and *special* buffers.
-(setq whitespace-line-column 110
-      whitespace-style       '(face trailing lines-tail))
-(add-hook 'prog-mode-hook #'whitespace-mode)
-(add-hook 'text-mode-hook #'whitespace-mode)
-(add-hook 'before-save-hook #'delete-trailing-whitespace)
-
-;;; ---------------------------------------------------------------------------
-;;; Theme
-;;; ---------------------------------------------------------------------------
-(load-theme 'modus-vivendi t)
-
-;;; ---------------------------------------------------------------------------
-;;; Packages
+;;; Third-party packages
 ;;; ---------------------------------------------------------------------------
 (use-package undo-tree
   :init  (global-undo-tree-mode)
@@ -130,7 +166,7 @@
 (use-package company
   :hook (after-init . global-company-mode)
   :custom
-  (company-idle-delay     0.2)
+  (company-idle-delay            0.2)
   (company-minimum-prefix-length 2))
 
 (use-package lsp-mode
