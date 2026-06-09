@@ -191,6 +191,13 @@
 ;;; ---------------------------------------------------------------------------
 ;;; Third-party packages
 ;;; ---------------------------------------------------------------------------
+(use-package gcmh
+  :init
+  (setq gcmh-idle-delay              'auto
+        gcmh-auto-idle-delay-factor  10
+        gcmh-high-cons-threshold     (* 64 1024 1024))
+  :config (gcmh-mode 1))
+
 (use-package undo-tree
   :init  (global-undo-tree-mode)
   :custom
