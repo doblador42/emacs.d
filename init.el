@@ -54,8 +54,7 @@
       vc-follow-symlinks      t
       sentence-end-double-space nil
       read-process-output-max (* 1024 1024) ; 1 MB — helps LSP throughput
-      tab-always-indent       'complete     ; TAB indents, then completes
-      native-comp-async-report-warnings-errors 'silent)
+      tab-always-indent       'complete)    ; TAB indents, then completes
 (setq-default indent-tabs-mode nil
               tab-width        4)
 
