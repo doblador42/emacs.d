@@ -59,8 +59,33 @@
               tab-width        4)
 
 ;;; ---------------------------------------------------------------------------
-;;; Performance
+;;; Performance — redisplay, bidi, jit-lock, long lines
 ;;; ---------------------------------------------------------------------------
+;; Bidirectional text: Greek is LTR (Unicode class L), so forcing LTR is safe.
+;; Only RTL scripts (Arabic, Hebrew) would render logical-order with these on.
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+
+;; Scroll/redisplay shortcuts.
+(setq fast-but-imprecise-scrolling           t
+      redisplay-skip-fontification-on-input  t
+      auto-window-vscroll                    nil
+      cursor-in-non-selected-windows         nil
+      highlight-nonselected-windows          nil
+      inhibit-compacting-font-caches         t)  ; keep multi-font caches in memory
+
+;; jit-lock: fontify visible area first, finish in the background.
+(setq jit-lock-defer-time   0
+      jit-lock-stealth-time 2
+      jit-lock-stealth-nice 0.5
+      jit-lock-chunk-size   4096)
+
+;; Long lines: enable C-level shortcuts in xdisp.c.
+(setq long-line-threshold     1000
+      large-hscroll-threshold 1000
+      syntax-wholeline-max    1000)
+
 (when (fboundp 'pixel-scroll-precision-mode) (pixel-scroll-precision-mode 1))
 (when (fboundp 'repeat-mode)                  (repeat-mode 1))
 
