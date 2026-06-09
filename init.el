@@ -45,16 +45,20 @@
 ;;; ---------------------------------------------------------------------------
 ;;; Editor defaults
 ;;; ---------------------------------------------------------------------------
-(setq inhibit-startup-message t
-      visible-bell            t
-      ring-bell-function      'ignore
-      use-short-answers       t      ; replaces (defalias 'yes-or-no-p 'y-or-n-p)
-      create-lockfiles        nil
-      require-final-newline   t
-      vc-follow-symlinks      t
-      sentence-end-double-space nil
-      read-process-output-max (* 1024 1024) ; 1 MB — helps LSP throughput
-      tab-always-indent       'complete)    ; TAB indents, then completes
+(setq inhibit-startup-message       t
+      visible-bell                  t
+      ring-bell-function            'ignore
+      use-short-answers             t     ; replaces (defalias 'yes-or-no-p 'y-or-n-p)
+      create-lockfiles              nil
+      require-final-newline         t
+      vc-follow-symlinks            t
+      sentence-end-double-space     nil
+      vc-handled-backends           '(Git)         ; skip SVN/Hg/Bzr/etc. probes
+      auto-mode-case-fold           nil            ; skip second case-insensitive pass
+      idle-update-delay             1.0            ; slow non-critical mode-line pollers
+      process-adaptive-read-buffering nil          ; smoother LSP I/O
+      read-process-output-max       (* 1024 1024)  ; 1 MB — LSP throughput
+      tab-always-indent             'complete)     ; TAB indents, then completes
 (setq-default indent-tabs-mode nil
               tab-width        4)
 
