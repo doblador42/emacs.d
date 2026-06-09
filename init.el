@@ -126,7 +126,11 @@
 (use-package autorevert
   :ensure nil
   :init
-  (setq global-auto-revert-non-file-buffers t)
+  (setq global-auto-revert-non-file-buffers t
+        auto-revert-verbose                 nil  ; no minibuffer spam on every revert
+        auto-revert-interval                1    ; poll fallback: 1s instead of 5s
+        auto-revert-avoid-polling           t    ; pure inotify, skip polling entirely
+        auto-revert-check-vc-info           t)   ; refresh VC info (magit/mode-line)
   :config
   (global-auto-revert-mode 1))
 
