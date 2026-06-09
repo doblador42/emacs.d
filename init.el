@@ -251,6 +251,26 @@
   :config (auctex-latexmk-setup))
 
 ;;; ---------------------------------------------------------------------------
+;;; AI agent integration
+;;; ---------------------------------------------------------------------------
+;; claude-code.el runs the `claude' CLI in an `eat' terminal. `:bind-keymap'
+;; defers loading until the prefix is pressed, so startup cost stays zero.
+(use-package inheritenv
+  :vc (:url "https://github.com/purcell/inheritenv" :rev :newest)
+  :defer t)
+
+(use-package eat                       ; pure-elisp terminal backend (no compile)
+  :defer t)
+
+(use-package claude-code
+  :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
+  :bind-keymap ("C-c c" . claude-code-command-map)
+  :bind (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
+  :config
+  (setq claude-code-terminal-backend 'eat)
+  (claude-code-mode))
+
+;;; ---------------------------------------------------------------------------
 ;;; Helper commands
 ;;; ---------------------------------------------------------------------------
 (defun screenshot-svg ()
