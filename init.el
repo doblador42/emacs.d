@@ -271,6 +271,36 @@
       (compile (concat "php artisan " command)))))
 (global-set-key (kbd "C-c a") #'my-artisan)
 
+;;; ---------------------------------------------------------------------------
+;;; Go
+;;; ---------------------------------------------------------------------------
+;; gopls lives in ~/go/bin, which a desktop-launched Emacs doesn't have on
+;; PATH; expose it to Emacs and its subprocesses.
+(let ((gobin (expand-file-name "go/bin" (getenv "HOME"))))
+  (when (file-directory-p gobin)
+    (add-to-list 'exec-path gobin)
+    (unless (member gobin (split-string (getenv "PATH") path-separator))
+      (setenv "PATH" (concat gobin path-separator (getenv "PATH"))))))
+
+;; go-mode's autoloads also register go-dot-mod-mode for go.mod files; it is
+;; not derived from go-mode, so it needs its own lsp hook for gopls's
+;; dependency diagnostics and code lenses.
+(use-package go-mode
+  :mode "\\.go\\'"
+  :hook ((go-mode         . lsp-deferred)
+         (go-dot-mod-mode . lsp-deferred)))
+
+;; Go convention: gofmt formatting and organized imports on every save, via
+;; gopls. Guard on the server capability (not just a live workspace) so a
+;; save during server startup neither errors nor blocks.
+(defun my-go-before-save ()
+  (when (and (fboundp 'lsp-feature?) (lsp-feature? "textDocument/formatting"))
+    (lsp-format-buffer)
+    (lsp-organize-imports)))
+(defun my-go-install-save-hooks ()
+  (add-hook 'before-save-hook #'my-go-before-save t t))
+(add-hook 'go-mode-hook #'my-go-install-save-hooks)
+
 ;; File-association-only modes — :mode implies :defer t.
 (use-package csv-mode      :mode "\\.csv\\'")
 (use-package markdown-mode :mode ("\\.md\\'" "\\.markdown\\'"))
