@@ -222,7 +222,56 @@
 
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
-  :init (setq lsp-keymap-prefix "C-c l"))
+  :init (setq lsp-keymap-prefix "C-c l")
+  :config
+  ;; Laravel: dependency/runtime/build trees would blow the file-watch limit.
+  (dolist (dir '("[/\\\\]vendor\\'"
+                 "[/\\\\]storage\\'"
+                 "[/\\\\]public[/\\\\]build\\'"))
+    (add-to-list 'lsp-file-watch-ignored-directories dir))
+  ;; Intelephense index caches default to the repo root; keep them in .cache/
+  ;; (gitignored). setq before lsp-php.el loads wins over its defcustom.
+  (setq lsp-intelephense-storage-path
+        (expand-file-name ".cache/lsp-intelephense" user-emacs-directory)
+        lsp-intelephense-global-storage-path
+        (expand-file-name ".cache/intelephense" user-emacs-directory)))
+
+;;; ---------------------------------------------------------------------------
+;;; PHP / Laravel
+;;; ---------------------------------------------------------------------------
+;; Intelephense lives in .cache/lsp/npm/intelephense — the path lsp-mode
+;; manages itself, so lsp-install-server keeps working for updates.
+(use-package php-mode
+  :mode "\\.php\\'"
+  :hook (php-mode . lsp-deferred))
+
+;; Blade templates. web-mode detects the blade engine from the file name; this
+;; entry is prepended after php-mode's, so it wins for *.blade.php.
+(use-package web-mode
+  :mode "\\.blade\\.php\\'"
+  :custom
+  (web-mode-markup-indent-offset 4)
+  (web-mode-css-indent-offset    4)
+  (web-mode-code-indent-offset   4))
+
+;; LSP completions arrive as snippets; without yasnippet the $1 placeholders
+;; would be inserted literally.
+(use-package yasnippet
+  :hook (lsp-mode . yas-minor-mode))
+
+;; Laravel .env files are shell-style key=value. Anchor to a dotfile basename
+;; and keep the suffix slash-free so config.env.php / *.env.*/ dirs don't match.
+(add-to-list 'auto-mode-alist '("/\\.env\\(\\.[^/]+\\)?\\'" . conf-mode))
+
+(defun my-artisan (command)
+  "Run \"php artisan COMMAND\" from the nearest project root."
+  (interactive "sphp artisan ")
+  (let ((root (locate-dominating-file default-directory "artisan")))
+    (unless root
+      (user-error "No artisan script found above %s" default-directory))
+    (let ((default-directory root))
+      (compile (concat "php artisan " command)))))
+(global-set-key (kbd "C-c a") #'my-artisan)
 
 ;; File-association-only modes — :mode implies :defer t.
 (use-package csv-mode      :mode "\\.csv\\'")
