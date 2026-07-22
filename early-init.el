@@ -35,7 +35,6 @@
   (setq native-comp-speed                        2
         native-comp-jit-compilation              t      ; background JIT (default)
         native-comp-async-report-warnings-errors 'silent
-        native-comp-async-on-battery-power       nil
         package-native-compile                   t      ; AOT compile at install
         load-prefer-newer                        nil))  ; don't bypass .eln
 

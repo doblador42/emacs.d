@@ -3,12 +3,12 @@
 ;;; ---------------------------------------------------------------------------
 ;;; Garbage collection
 ;;; ---------------------------------------------------------------------------
-;; early-init.el raised gc-cons-threshold for startup. Restore something sane
-;; once we're up, so interactive editing isn't a memory hog.
+;; early-init.el raised GC limits and deferred file-name-handler-alist for
+;; startup. Restore the handlers and percentage here; gc-cons-threshold is
+;; owned by gcmh (enabled below) from the first keystroke on.
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq gc-cons-threshold  (* 16 1024 1024)
-                  gc-cons-percentage 0.1
+            (setq gc-cons-percentage 0.1
                   file-name-handler-alist
                   (delete-dups
                    (append file-name-handler-alist
@@ -55,7 +55,6 @@
       sentence-end-double-space     nil
       vc-handled-backends           '(Git)         ; skip SVN/Hg/Bzr/etc. probes
       auto-mode-case-fold           nil            ; skip second case-insensitive pass
-      idle-update-delay             1.0            ; slow non-critical mode-line pollers
       process-adaptive-read-buffering nil          ; smoother LSP I/O
       read-process-output-max       (* 1024 1024)  ; 1 MB — LSP throughput
       tab-always-indent             'complete)     ; TAB indents, then completes
@@ -129,8 +128,7 @@
   (setq global-auto-revert-non-file-buffers t
         auto-revert-verbose                 nil  ; no minibuffer spam on every revert
         auto-revert-interval                1    ; poll fallback: 1s instead of 5s
-        auto-revert-avoid-polling           t    ; pure inotify, skip polling entirely
-        auto-revert-check-vc-info           t)   ; refresh VC info (magit/mode-line)
+        auto-revert-avoid-polling           t)   ; pure inotify, skip polling entirely
   :config
   (global-auto-revert-mode 1))
 
